@@ -5,6 +5,7 @@
 import SolSys
 
 # Start-up / Initialization of our example.
+# TODO Initialize and show an example System.
 Sol = SolSys.SolSys()
 
 if __name__ == "__main__":

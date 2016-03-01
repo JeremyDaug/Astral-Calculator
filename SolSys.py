@@ -22,7 +22,7 @@ class SolSys:
 
 class Body:
     def __init__(self):
-        self._Name = 'NA'  # The name of the body, should be unique, but is not required.
+        self.Name = 'NA'  # The name of the body, should be unique, but is not required.
         self._Day = 24  # The length of the body's day in hours.
         self._Year = 0  # The length of the year in the body's day
         self._Start = 0  # The offset from 0 in degrees the body starts at
