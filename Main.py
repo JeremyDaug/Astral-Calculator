@@ -8,27 +8,26 @@ Astral Calculator's Main file, includes our windows and jumping off points for m
 from tkinter import *
 import SolSys
 
-counter = 0
+class Application(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.pack()
+        self.createWidgets()
 
+    def createWidgets(self):
+        self.hi_there = Button(self)
+        self.hi_there["text"] = "Hello World\n(Click Me)"
+        self.hi_there["command"] = self.say_hi
 
-def counter_label(label):
-    def count():
-        global counter
-        counter += 1
-        label.config(text=str(counter))
-        label.after(1000, count)
-    count()
+        self.QUIT = Button(self, text="QUIT", fg="red", command=root.destroy)
+        self.QUIT.pack(side="bottom")
+
+    def say_hi(self):
+        print("Hi there, everyone!")
 
 root = Tk()
-root.title("Counting Seconds")
-label = Label(root, fg="green")
-label.pack()
-counter_label(label)
-button = Button(root, text="Stop", width=25, command=root.destroy)
-button.pack()
-root.mainloop()
-
-root.mainloop()
+app = Application(master=root)
+app.mainloop()
 
 if __name__ == "__main__":
     print("You exist and should take comfort and that fact.")
