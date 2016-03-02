@@ -6,9 +6,8 @@ Astral Calculator's Main file, includes our windows and jumping off points for m
 """
 
 from tkinter import *
-import json
 from tkinter import ttk
-from tkinter import messagebox
+import pickle
 import SolSys
 
 
@@ -16,28 +15,46 @@ import SolSys
 def SolarSystemDefault(data=SolSys.SolSys()):
     # Create the universal system
     data.Name = 'Solar System'
-    data.Zodiac = {}
+    data.setday(24)
 
-    # Create the sun
-    heart = SolSys.Body()
-    heart.Name = 'Sun'
-    heart.day(11)
-    heart.Special['Central'] = True
-    data.Heart = heart
-    data.Special['Helio'] = True
-    core = SolSys.Body()
-    core.Name = 'Earth'
-    core.day(24)
-    core.year(365.25)
-    core.Parent = data.Heart
-    data.setbasis(core)
-    data.Heart.Kids.append(core)
+    # Sun
+    temp = SolSys.Body()
+    temp.Name = 'Sun'
+    data.Bods = temp
+
+    if temp is data.Bods:
+        print('temp and data.Bods is the same')
+
+    # Earth
+    temp = SolSys.Body()
+    temp.Name = 'Earth'
+    temp.Year = 365.25 * 24
+    temp.Day = 24
+    temp.Parent = data.Bods
+    data.Bods.children.append(temp)
+
+    temp = SolSys.Body()
+    temp.Name = 'Moon'
+    temp.Year = 29.5
+    temp.Day = 29.5
+
+    check = data.addbodyto('Earth', temp)
+    if check:
+        print('It was added properly')
+
+    if temp is data.Bods:
+        print('Yeah, this shit needs to be fixed')
+
+    pickle.dump(data, open('test.p', 'wb'))
+
+    print(data.getnames())
+    print(data.namesindict())
 
     return data
 
 # Our Current Solar System that we are working through.
-current = SolSys.SolSys()
-SolarSystemDefault(current)
+SolarSystemDefault()
+current = pickle.load(open('test.p', 'rb'))
 
 
 # Window setup
@@ -46,14 +63,17 @@ root.title('Astral Calculator')
 root.wm_iconbitmap('favicon.ico')
 # End Setup
 
+# Setup variables
+
 # What's in the Window
 SystemLbl = Label(root, text='System Name').grid(row=0, column=0)
 SystemName = Entry(root).grid(row=1, column=0)
-CoreLBL = Label(root, text='Core Object\'s Name').grid(row=0, column=1)
-CoreName = Entry(root).grid(row=1, column=1)
-CoreDayLBL = Label(root, text='Core Object\'s Day in hours').grid(row=3)
-CoreDay = Entry(root).grid(row=4)
-btn = Button(root, text='Button').grid(row=5)
+
+BodyChoice = ttk.Combobox(root, values=current.getnames()).grid(row=2, column=0)
+
+NewBodyLbl = Button(root, text='New Body').grid(row=3, column=0)
+
+# Current Body Data, input, and output
 
 if __name__ == "__main__":
     root.mainloop()

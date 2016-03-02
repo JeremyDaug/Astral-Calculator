@@ -9,82 +9,129 @@ class SolSys:
     """
     Solar System Class
     Holds all data and acts as both an interface and manager for our celestial bodies.
-
-    Name: The name of the system to be output elsewhere.
-    _Heart: The body that is being used as the central most pivot point.
-    _Special: A Special container that holds data for system wide oddities.
     """
     def __init__(self):
+        # The name of the system
+        self.Name = ''
+        # The tree of the system
+        self.Bods = None
+        # The standardized day of the system
+        self.Day = 24
+        # The body we are currently observing
+        self.Current = None
+
+    def setday(self, num):
         """
-        Initializer, takes nothing and makes nothing real. Adds in new stuff for init but nothing useful.
-
-        :return: Returns the created class
+        Sets the system's standard day unit in hours to standardize the year in days across the system.
+        :param num: The number of hours in the day
         """
-        self.Name = "Unnamed"
-        # Points to a body that will be treated as the Central most body (Such as the star)
-        self.Heart = None
-        # A dict of special traits, if empty assume heliocentric with no peculiarities
-        self.Special = {}
-        # Points to the body that is used as the measuring stick for all other systems in terms of this body's hr/day.
-        self._Basis = None
-        # Should contain a dict marked by degrees to give a rough backdrop over a year.
-        self.Zodiac = {}
-
-    def setbasis(self, base):
-        if type(base) is Body:
-            self._Basis = base
+        if num < 0:
+            self.Day = -num
         else:
-            raise Exception("Something Broke Somewhere")
+            self.Day = num
 
-    def getbasis(self):
-        return self._Basis
+    def basedayoff(self, bod):
+        """
+        Sets the System's day off of a given body's day.
+        :param bod: The body we are basing our day off of.
+        """
+        self.Day = bod.Day
 
-    def sysday(self):
-        if self._Basis is None:
-            return 24
-        else:
-            return self._Basis.getday()
+    # TODO Update this to work purely through the Body Class
+    def getnames(self):
+        """
+        Gets a list of all the bodies names and outputs them in a list
+        :return: A lizt of strings, all the names of the existing bodies.
+        """
+        ret = list()
+        ret.append(self.Bods.Name)
+        for i in self.Bods.children:
+            ret.append(i.Name)
+            i.getnames(ret)
+        return ret
+
+    def addbodyto(self, name, body):
+        """
+        Adds a body to the body of the given name
+        :param name: The name of the body to add to
+        :param body: The Body to be added
+        :return: Bool of success or failure.
+        """
+        return self.Bods.addbodyto(name, body)
+
+    def namesindict(self):
+        """
+        Returns a dict form of all names, arranged in a basic tree shape.
+        :return: A dict structure all the way down.
+        """
+        ret = {}
+        self.Bods.namesindict(ret)
+        return ret
 
 
 class Body:
+    """
+    Body Class
+    Holds all data for our celestial bodies.
+    """
     def __init__(self):
-        self.Name = 'NA'  # The name of the body, should be unique, but is not required.
-        self._Day = 24  # The length of the body's day in hours.
-        self._Year = 0  # The length of the year in the body's day
-        self._Start = 0  # The offset from 0 in degrees the body starts at
-        self.Solstice = 0  # The day of the year that is counted as winter
-        self.Special = {}  # A place holder Dict for oddity data, such as 90 Deg tilted planets and the like.
-        self.Parent = None  # Points to the body it orbits, if empty it's the central planet
-        self.Kids = []  # A list of bodies that orbit the body
+        # Name of the body
+        self.Name = ''
+        # Length of the year in hours
+        self.Year = 0
+        # length of the day in hours
+        self.Day = 24
+        # offset from 0 that it start around the planet
+        self.Offset = 0
+        # the body it orbits about.
+        self.Parent = None
+        # The children of the body that orbit it.
+        self.children = []
 
-    def day(self, num):
-        """Data input/checker for _Day
-        :param num: the number of hours in that day
-        :return: Bool as to whether it is a valid input
+    def setyear(self, num):
+        """
+        Set the year of the body
+        :param num: the length of the year, automatically makes it positive.
         """
         if num < 0:
-            return False
+            self.Year = -num
         else:
-            self._Day = num
-            return True
+            self.Year = num
 
-    def getday(self):
-        return self._Day
-
-    def year(self, num):
-        """ Data input/checker for _year
-        :param num: the number of hours in a year
-        :return: Bool as to whether it is a valid input
+    def setday(self, num):
+        """
+        Sets the length of the planet's day in hours
+        :param num: The amount of hours in a day, automatically made positive
         """
         if num < 0:
-            return False
+            self.Day = -num
         else:
-            self._Year = num
+            self.Day = num
+
+    def setoffset(self, num):
+        """
+        Sets the offset of the body from 0 that it's at.
+        :param num: the number that is put into the offset, modded to be between 0 and 360
+        """
+        self.Offset = num % 360
+
+    def getnames(self, ret):
+        for i in self.children:
+            ret.append(i.Name)
+            i.getnames(ret)
+
+    def addbodyto(self, name, body):
+        if self.Name == name:
+            self.children.append(body)
             return True
 
-    def Start(self, num):
-        """
-        Data setter for _start
-        :param num: The degree it is at (may be any number, but will be within [0,360)
-        """
-        self._Start = num % 360
+        for i in self.children:
+            if i.addbodyto(name, body):
+                return True
+
+        return False
+
+    def namesindict(self, ret):
+        ret[self.Name] = {}
+        for i in self.children:
+            i.namesindict(ret[self.Name])
