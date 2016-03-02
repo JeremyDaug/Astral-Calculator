@@ -37,17 +37,13 @@ class SolSys:
         """
         self.Day = bod.Day
 
-    # TODO Update this to work purely through the Body Class
     def getnames(self):
         """
         Gets a list of all the bodies names and outputs them in a list
         :return: A lizt of strings, all the names of the existing bodies.
         """
         ret = list()
-        ret.append(self.Bods.Name)
-        for i in self.Bods.children:
-            ret.append(i.Name)
-            i.getnames(ret)
+        self.Bods.getnames(ret)
         return ret
 
     def addbodyto(self, name, body):
@@ -116,8 +112,8 @@ class Body:
         self.Offset = num % 360
 
     def getnames(self, ret):
+        ret.append(self.Name)
         for i in self.children:
-            ret.append(i.Name)
             i.getnames(ret)
 
     def addbodyto(self, name, body):

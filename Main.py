@@ -64,14 +64,18 @@ root.wm_iconbitmap('favicon.ico')
 # End Setup
 
 # Setup variables
+CurrBods = StringVar()
+CurrBods.set(current.Bods.Name)
 
 # What's in the Window
 SystemLbl = Label(root, text='System Name').grid(row=0, column=0)
 SystemName = Entry(root).grid(row=1, column=0)
 
-BodyChoice = ttk.Combobox(root, values=current.getnames()).grid(row=2, column=0)
+BodyChoice = ttk.Combobox(root, textvariable=CurrBods, values=current.getnames(), state='readonly').grid(row=2, column=0)
 
-NewBodyLbl = Button(root, text='New Body').grid(row=3, column=0)
+NewBodyLBL = Label(root, text='New orbiting body').grid(row=3, column=0)
+NewBodyName = Entry(root).grid(row=4, column=0)
+NewBodyButton = Button(root, text='New Body').grid(row=5, column=0)
 
 # Current Body Data, input, and output
 
