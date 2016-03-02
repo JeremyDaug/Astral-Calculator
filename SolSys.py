@@ -21,42 +21,70 @@ class SolSys:
         :return: Returns the created class
         """
         self.Name = "Unnamed"
-        self.Heart = None  # Points to a body that will be treated as the Central most body (Such as the star)
-        self.Special = {}  # A dict of special traits, if empty assume heliocentric with no peculiarities
-
+        # Points to a body that will be treated as the Central most body (Such as the star)
+        self.Heart = None
+        # A dict of special traits, if empty assume heliocentric with no peculiarities
+        self.Special = {}
         # Points to the body that is used as the measuring stick for all other systems in terms of this body's hr/day.
         self._Basis = None
-        self._Zodiac = {}  # Should contain a dict marked by degrees to give a rough backdrop over a year.
+        # Should contain a dict marked by degrees to give a rough backdrop over a year.
+        self.Zodiac = {}
 
-    def core(self, title, body_name):
-        """
-        Adds in the central most body of the system and it's data.
-        :param title: The name of the system.
-        :param body_name: The name of the body at the center.
-        """
-        self.Name = title
-        self.Heart = Body()
-        self.Heart.Name = body_name
-        self.Heart.changeday(int(input("How long of a day (in hours) does it have, if any. (Must be Non-negative)"
-                                       "Hours: ")))
+    def setbasis(self, base):
+        if type(base) is Body:
+            self._Basis = base
+        else:
+            raise Exception("Something Broke Somewhere")
+
+    def getbasis(self):
+        return self._Basis
+
+    def sysday(self):
+        if self._Basis is None:
+            return 24
+        else:
+            return self._Basis.getday()
 
 
 class Body:
     def __init__(self):
         self.Name = 'NA'  # The name of the body, should be unique, but is not required.
-        self.Day = 24  # The length of the body's day in hours.
-        self.Year = 0  # The length of the year in the body's day
-        self.Start = 0  # The offset from 0 in degrees the body starts at
+        self._Day = 24  # The length of the body's day in hours.
+        self._Year = 0  # The length of the year in the body's day
+        self._Start = 0  # The offset from 0 in degrees the body starts at
         self.Solstice = 0  # The day of the year that is counted as winter
         self.Special = {}  # A place holder Dict for oddity data, such as 90 Deg tilted planets and the like.
         self.Parent = None  # Points to the body it orbits, if empty it's the central planet
-        self.Kids = None  # A list of bodies that orbit the body
+        self.Kids = []  # A list of bodies that orbit the body
 
-    def changeday(self, time):
-        while time < 0:
-            print("Try again, and put in a number at least equal to 0 this time.")
-            time = int(input("Hours: "))
+    def day(self, num):
+        """Data input/checker for _Day
+        :param num: the number of hours in that day
+        :return: Bool as to whether it is a valid input
+        """
+        if num < 0:
+            return False
+        else:
+            self._Day = num
+            return True
 
-        self.Day = time
-        if time == 0:
-            self.Special['Dayless'] = True
+    def getday(self):
+        return self._Day
+
+    def year(self, num):
+        """ Data input/checker for _year
+        :param num: the number of hours in a year
+        :return: Bool as to whether it is a valid input
+        """
+        if num < 0:
+            return False
+        else:
+            self._Year = num
+            return True
+
+    def Start(self, num):
+        """
+        Data setter for _start
+        :param num: The degree it is at (may be any number, but will be within [0,360)
+        """
+        self._Start = num % 360
