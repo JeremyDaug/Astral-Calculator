@@ -1,6 +1,8 @@
-# Solar System Data Container and most of the calculation work.
-# Part of the Astral Calculator
-# Contains the Classes and functions for SolSys and Body
+"""
+Solar System Data Container and most of the calculation work.
+Part of the Astral Calculator
+Contains the Classes and functions for SolSys and Body
+"""
 
 # from math import *
 
@@ -56,8 +58,11 @@ class SolSys:
         :param body: The Body to be added
         :return: Bool of success or failure.
         """
+        if body.Name == '':
+            return False
+        if body.Name in self.getnames():
+            return False
         if self.Bods is None:
-            print('No body exists!')
             self.Bods = body
         return self.Bods.addbodyto(name, body)
 
@@ -76,23 +81,31 @@ class SolSys:
         self.Name = name
         return
 
+    def setcurrent(self, name):
+        if self.Bods is None:
+            return
+        self.Current = self.Bods.setcurrent(name)
+        if self.Current.Name != name:
+            print('There\'s been a problem finding it, but something return anyway.')
+        return
+
 
 class Body:
     """
     Body Class
     Holds all data for our celestial bodies.
     """
-    def __init__(self, name=''):
+    def __init__(self, name='', year=0, day=24, offset=0, parent=None):
         # Name of the body
         self.Name = name
         # Length of the year in hours
-        self.Year = 0
+        self.Year = year
         # length of the day in hours
-        self.Day = 24
+        self.Day = day
         # offset from 0 that it start around the planet
-        self.Offset = 0
+        self.Offset = offset
         # the body it orbits about.
-        self.Parent = None
+        self.Parent = parent
         # The children of the body that orbit it.
         self.children = []
 
@@ -144,3 +157,13 @@ class Body:
         ret[self.Name] = {}
         for i in self.children:
             i.namesindict(ret[self.Name])
+
+    def setcurrent(self, name):
+        if name == self.Name:
+            return self
+        else:
+            for i in self.children:
+                temp = i.setcurrent(name)
+                if temp is not None:
+                    return temp
+        return None
