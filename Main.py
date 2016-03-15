@@ -18,6 +18,16 @@ def addbodyto(current, name, body, values):
     if '<None>' in values.get():
         values.set(body.Name)
 
+    return
+
+
+def changefocus(current, name):
+    if '<None>':
+        return
+
+    return
+
+
 # A dumb quick maker to test SolSys and outputting data to pickle
 def SolarSystemDefault(data=SolSys.SolSys()):
     # Create the universal system
@@ -66,7 +76,6 @@ def SolarSystemDefault(data=SolSys.SolSys()):
 # Our Current Solar System that we are working through.
 current = SolSys.SolSys()
 
-
 # Window setup
 root = Tk()
 root.title('Astral Calculator')
@@ -86,11 +95,13 @@ SystemName = Entry(root, textvariable=SysName)
 SystemName.bind('<Return>', lambda x: current.setname(SystemName.get()))
 SystemName.bind('<FocusOut>', lambda x: current.setname(SystemName.get()))
 
+BodyLBL = Label(root, text='Current Body')
 BodyChoice = ttk.Combobox(root,
                           textvariable=CurrBod,
                           values=current.getnames(),
                           state='readonly'
                           )
+BodyChoice.bind('<FocusOut>', lambda e: changefocus(current, CurrBod.get()))
 
 NewBodyLBL = Label(root, text='New orbiting body')
 NewBodyName = Entry(root, textvariable=NewBodyNameVar)
@@ -114,13 +125,14 @@ QuickSaveButton = Button(root, text='QuickSave', command=lambda : pickle.dump(cu
 SystemLbl.grid(row=0, column=0)
 SystemName.grid(row=1, column=0, pady=4)
 
-BodyChoice.grid(row=3, column=0, pady=4)
+BodyLBL.grid(row=2, column=0, sticky=S)
+BodyChoice.grid(row=3, column=0, sticky=N)
 
 NewBodyLBL.grid(row=5, column=0)
-NewBodyName.grid(row=6, column=0)
-NewBodyButton.grid(row=7, column=0)
+NewBodyName.grid(row=6, column=0, pady=4)
+NewBodyButton.grid(row=7, column=0, pady=4)
 
-QuickSaveButton.grid(row=8, column=1)
+QuickSaveButton.grid(row=8, column=1, pady=4, padx=4)
 
 if __name__ == "__main__":
     root.mainloop()
