@@ -11,7 +11,14 @@ import pickle
 import SolSys
 
 
-# A dumb quick maker to test SolSys and outputting data to a json
+# Utility functions to interface with the SolSys faster and nicer
+def addbodyto(current, name, body, values):
+    current.addbodyto(name, body)
+    values['values'] = current.getnames()
+    if '<None>' in values.get():
+        values.set(body.Name)
+
+# A dumb quick maker to test SolSys and outputting data to pickle
 def SolarSystemDefault(data=SolSys.SolSys()):
     # Create the universal system
     data.Name = 'Solar System'
@@ -30,8 +37,12 @@ def SolarSystemDefault(data=SolSys.SolSys()):
     temp.Name = 'Earth'
     temp.Year = 365.25 * 24
     temp.Day = 24
-    temp.Parent = data.Bods
-    data.Bods.children.append(temp)
+
+    check = data.addbodyto('Sun', temp)
+    if check:
+        print('It was added properly.')
+    if temp is data.Bods:
+        print('Something went wrong.')
 
     temp = SolSys.Body()
     temp.Name = 'Moon'
@@ -53,8 +64,7 @@ def SolarSystemDefault(data=SolSys.SolSys()):
     return data
 
 # Our Current Solar System that we are working through.
-SolarSystemDefault()
-current = pickle.load(open('test.p', 'rb'))
+current = SolSys.SolSys()
 
 
 # Window setup
@@ -64,21 +74,56 @@ root.wm_iconbitmap('favicon.ico')
 # End Setup
 
 # Setup variables
-CurrBods = StringVar()
-CurrBods.set(current.Bods.Name)
+SysName = StringVar()
+SysName.set(current.Name)
+CurrBod = StringVar()
+CurrBod.set(current.getnames())
+NewBodyNameVar = StringVar()
 
 # What's in the Window
-SystemLbl = Label(root, text='System Name').grid(row=0, column=0)
-SystemName = Entry(root).grid(row=1, column=0)
+SystemLbl = Label(root, text='System Name')
+SystemName = Entry(root, textvariable=SysName)
+SystemName.bind('<Return>', lambda x: current.setname(SystemName.get()))
+SystemName.bind('<FocusOut>', lambda x: current.setname(SystemName.get()))
 
-BodyChoice = ttk.Combobox(root, textvariable=CurrBods, values=current.getnames(), state='readonly').grid(row=2, column=0)
+BodyChoice = ttk.Combobox(root,
+                          textvariable=CurrBod,
+                          values=current.getnames(),
+                          state='readonly'
+                          )
 
-NewBodyLBL = Label(root, text='New orbiting body').grid(row=3, column=0)
-NewBodyName = Entry(root).grid(row=4, column=0)
-NewBodyButton = Button(root, text='New Body').grid(row=5, column=0)
+NewBodyLBL = Label(root, text='New orbiting body')
+NewBodyName = Entry(root, textvariable=NewBodyNameVar)
+NewBodyButton = Button(root,
+                       text='Create New Body',
+                       command=lambda: addbodyto(current,
+                                                 BodyChoice.get(),
+                                                 SolSys.Body(NewBodyNameVar.get()),
+                                                 BodyChoice
+                                                         )
+                       )
 
 # Current Body Data, input, and output
 
+# Save options
+# Quick Save Button
+QuickSaveButton = Button(root, text='QuickSave', command=lambda : pickle.dump(current, open('quicksave.p', 'wb')))
+
+
+# Grid layout setting
+SystemLbl.grid(row=0, column=0)
+SystemName.grid(row=1, column=0, pady=4)
+
+BodyChoice.grid(row=3, column=0, pady=4)
+
+NewBodyLBL.grid(row=5, column=0)
+NewBodyName.grid(row=6, column=0)
+NewBodyButton.grid(row=7, column=0)
+
+QuickSaveButton.grid(row=8, column=1)
+
 if __name__ == "__main__":
     root.mainloop()
+    print(current.Name)
+    print(current.namesindict())
     print("You exist and should take comfort and that fact.")

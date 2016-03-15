@@ -42,6 +42,9 @@ class SolSys:
         Gets a list of all the bodies names and outputs them in a list
         :return: A lizt of strings, all the names of the existing bodies.
         """
+        if self.Bods is None:
+            return ['<None>']
+
         ret = list()
         self.Bods.getnames(ret)
         return ret
@@ -53,6 +56,9 @@ class SolSys:
         :param body: The Body to be added
         :return: Bool of success or failure.
         """
+        if self.Bods is None:
+            print('No body exists!')
+            self.Bods = body
         return self.Bods.addbodyto(name, body)
 
     def namesindict(self):
@@ -60,9 +66,15 @@ class SolSys:
         Returns a dict form of all names, arranged in a basic tree shape.
         :return: A dict structure all the way down.
         """
+        if self.Bods is None:
+            return 'None'
         ret = {}
         self.Bods.namesindict(ret)
         return ret
+
+    def setname(self, name):
+        self.Name = name
+        return
 
 
 class Body:
@@ -70,9 +82,9 @@ class Body:
     Body Class
     Holds all data for our celestial bodies.
     """
-    def __init__(self):
+    def __init__(self, name=''):
         # Name of the body
-        self.Name = ''
+        self.Name = name
         # Length of the year in hours
         self.Year = 0
         # length of the day in hours
@@ -118,6 +130,7 @@ class Body:
 
     def addbodyto(self, name, body):
         if self.Name == name:
+            body.Parent = self
             self.children.append(body)
             return True
 
