@@ -113,7 +113,10 @@ class App:
         self.YearHour = Entry(self.root, textvariable=self.YearHourVar)
         self.YearInDay = Label(self.root, text='Year in System Days')
         self.YearDays = Entry(self.root, textvariable=self.YearDayVar)
-        self.YearHour.bind('<FocusOut>', self.changeyear)
+        self.YearHour.bind('<FocusOut>', self.changeyearhours)
+        self.YearHour.bind('<Return>', self.changeyearhours)
+        self.YearDays.bind('<FocusOut>', self.changeyeardays)
+        self.YearDays.bind('<Return>', self.changeyeardays)
         # self.YearRadio1 = Radiobutton(self.root, text='Static Days')
         # Day
         self.DayLBL = Label(self.root, text='Day')
@@ -142,7 +145,8 @@ class App:
         SysDayGrd = (0, 1)  # 2x1
         NewNameGrd = (0,2)  # 1x2
         YearGrd = (3, 2)  # 3x2
-        DayGrd = (6, 2)
+        DayGrd = (6, 2)  # 2x2
+        OffsetGrd = (6, 4)  # 2x2
         QckSvGrd = (100, 100)  # 1x1
 
         self.SystemLbl.grid(row=SysLabGrd[0], column=SysLabGrd[1])
@@ -170,6 +174,9 @@ class App:
         self.DayLBL.grid(row=DayGrd[0], column=DayGrd[1])
         self.DayInHours.grid(row=DayGrd[0]+1, column=DayGrd[1])
         self.DayHours.grid(row=DayGrd[0]+1, column=DayGrd[1]+1)
+
+        self.OffsetLBL.grid(row=OffsetGrd[0], column=OffsetGrd[1])
+        self.Offset.grid(row=OffsetGrd[0], column=OffsetGrd[1]+1)
 
         self.QuickSaveButton.grid(row=QckSvGrd[0], column=QckSvGrd[1], pady=4, padx=4)
 
@@ -200,9 +207,18 @@ class App:
             self.CurrBod.set(self.CurrentBodyVar.get())
         return
 
-    def changeyear(self, event=None):
+    def changeyearhours(self, event=None):
         self.current.Current.setyear(self.YearHourVar.get())
+        self.updatedata()
+        return
 
+    def changeyeardays(self, event=None):
+        self.current.Current.setyear(self.YearDayVar.get()*self.current.Day)
+        self.updatedata()
+        return
+
+    def changedayhours(self, event=None):
+        self.current.Current.setday(self.DayVar.get())
         self.updatedata()
         return
 
