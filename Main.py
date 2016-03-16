@@ -9,7 +9,7 @@ from tkinter import *
 from tkinter import ttk
 import pickle
 import SolSys
-
+# import random
 
 # A dumb quick maker to test SolSys and outputting data to pickle
 def SolarSystemDefault(data=SolSys.SolSys()):
@@ -21,21 +21,39 @@ def SolarSystemDefault(data=SolSys.SolSys()):
     temp = SolSys.Body()
     temp.Name = 'Sun'
     data.Bods = temp
+    data.Current = data.Bods
+    data.Extras['Ratio'] = SolSys.STDSOLRAT
 
-    # Earth
-    temp = SolSys.Body()
-    temp.Name = 'Earth'
-    temp.Year = 365.25 * 24
-    temp.Day = 24
-
+    # Mercury
+    temp = SolSys.Body(name='Mercury', year=88*24, day=175.97, extra={'Ratio': SolSys.STDTERRAT})
     data.addbodyto('Sun', temp)
 
-    temp = SolSys.Body()
-    temp.Name = 'Moon'
-    temp.Year = 29.5*24
-    temp.Day = 29.5*24
+    # Venus
+    temp = SolSys.Body(name='Venus', year=225*24, day=117*24, extra={'Ratio': SolSys.STDTERRAT})
+    data.addbodyto('Sun', temp)
 
+    # Earth
+    temp = SolSys.Body(name='Earth', year=365.25*24, day=24)
+    data.addbodyto('Sun', temp)
+    # Moon
+    temp = SolSys.Body(name='Moon', year=29.5*24, day=29.5*24)
     data.addbodyto('Earth', temp)
+
+    # Mars
+    temp = SolSys.Body(name='Mars', year=687*24, day=24.617, extra={'Ratio': SolSys.STDTERRAT})
+    data.addbodyto('Sun', temp)
+    # Phobos
+    temp = SolSys.Body(name='Phobos', year=0.318*24, day=0.318*24)
+    data.addbodyto('Mars', temp)
+    # Deimos
+    temp = SolSys.Body(name='Deimos', year=1.236*24, day=1.236*24)
+    data.addbodyto('Mars', temp)
+
+    # Jupiter
+    # Io
+    # Europa
+    # Ganymede
+    # Callisto
 
     return data
 
@@ -45,7 +63,7 @@ class App:
     def __init__(self):
         # The star system we are working with.
         self.current = SolSys.SolSys()
-        #SolarSystemDefault(self.current)
+        SolarSystemDefault(self.current)
 
         # Window setup
         self.root = Tk()
@@ -71,8 +89,6 @@ class App:
         # What's in the Window
         self.SystemLbl = Label(self.root, text='System Name')
         self.SystemName = Entry(self.root, textvariable=self.SysName)
-        self.SystemName.bind('<Return>', lambda x: self.current.setname(self.SystemName.get()))
-        self.SystemName.bind('<FocusOut>', lambda x: self.current.setname(self.SystemName.get()))
 
         self.BodyLBL = Label(self.root, text='Current Body')
         self.BodyChoice = ttk.Combobox(self.root,
@@ -80,16 +96,12 @@ class App:
                                        values=self.current.getnames(),
                                        state='readonly'
                                        )
-        self.BodyChoice.bind('<<ComboboxSelected>>', lambda e: self.updatedata())
-        self.BodyChoice.bind('<Return>', lambda e: self.updatedata())
-        self.BodyChoice.bind('<FocusOut>', lambda e: self.updatedata())
 
         self.NewBodyLBL = Label(self.root, text='New orbiting body')
         self.NewBodyName = Entry(self.root, textvariable=self.NewBodyNameVar)
         self.NewBodyButton = Button(self.root,
                                     text='Create New Body',
-                                    command=self.addbodyto
-                                    )
+                                    command=self.addbodyto)
 
         # Standard day of the System
         self.SystemDayLBL = Label(self.root, text='System Day Length')
@@ -98,33 +110,29 @@ class App:
                                  to=100000,
                                  textvariable=self.SystemDayVar,
                                  command=self.changesysday)
-        self.SystemDay.bind('<Return>', self.changesysday)
-        self.SystemDay.bind('<FocusOut>', self.changesysday)
 
         # Current Body Data, input, and output
         # Body Name
         self.CurrentBodyLBL = Label(self.root, text='Body\'s name')
         self.CurrentBody = Entry(self.root, textvariable=self.CurrentBodyVar)
-        self.CurrentBody.bind('<Return>', self.changename)
-        self.CurrentBody.bind('<FocusOut>', self.changename)
+
         # Year
         self.YearLBL = Label(self.root, text='Year')
         self.YearInHours = Label(self.root, text='Year in Hours')
         self.YearHour = Entry(self.root, textvariable=self.YearHourVar)
         self.YearInDay = Label(self.root, text='Year in System Days')
         self.YearDays = Entry(self.root, textvariable=self.YearDayVar)
-        self.YearHour.bind('<FocusOut>', self.changeyearhours)
-        self.YearHour.bind('<Return>', self.changeyearhours)
-        self.YearDays.bind('<FocusOut>', self.changeyeardays)
-        self.YearDays.bind('<Return>', self.changeyeardays)
+
         # self.YearRadio1 = Radiobutton(self.root, text='Static Days')
         # Day
         self.DayLBL = Label(self.root, text='Day')
         self.DayInHours = Label(self.root, text='Day in Hours')
         self.DayHours = Entry(self.root, textvariable=self.DayVar)
+
         # Offset
         self.OffsetLBL = Label(self.root, text='Body Offset from 0 deg')
         self.Offset = Entry(self.root, textvariable=self.OffsetVar)
+
         # Children
 
         # Save options
@@ -132,12 +140,44 @@ class App:
         self.QuickSaveButton = Button(self.root,
                                       text='QuickSave',
                                       command=lambda: pickle.dump(self.current, open('quicksave.p', 'wb')))
+        self.QuickLoadButton = Button(self.root,
+                                      text='QuickLoad',
+                                      command=self.quickload)
 
+        self.bindset()
         self.gridset()
 
         self.updatedata()
+        return
 
-        # Grid layout setting
+    # Binding Settings
+    def bindset(self):
+        self.SystemName.bind('<Return>', lambda x: self.current.setname(self.SystemName.get()))
+        self.SystemName.bind('<FocusOut>', lambda x: self.current.setname(self.SystemName.get()))
+
+        self.BodyChoice.bind('<<ComboboxSelected>>', lambda e: self.updatedata())
+        self.BodyChoice.bind('<Return>', lambda e: self.updatedata())
+        self.BodyChoice.bind('<FocusOut>', lambda e: self.updatedata())
+
+        self.SystemDay.bind('<Return>', self.changesysday)
+        self.SystemDay.bind('<FocusOut>', self.changesysday)
+
+        self.CurrentBody.bind('<Return>', self.changename)
+        self.CurrentBody.bind('<FocusOut>', self.changename)
+
+        self.YearHour.bind('<FocusOut>', self.changeyearhours)
+        self.YearHour.bind('<Return>', self.changeyearhours)
+        self.YearDays.bind('<FocusOut>', self.changeyeardays)
+        self.YearDays.bind('<Return>', self.changeyeardays)
+
+        self.DayHours.bind('<FocusOut>', self.changedayhours)
+        self.DayHours.bind('<Return>', self.changedayhours)
+
+        self.Offset.bind('<Return>', self.changeoffset)
+        self.Offset.bind('<FocusOut>', self.changeoffset)
+        return
+
+    # Grid layout setting
     def gridset(self):
         SysLabGrd = (0, 0)  # 2x1
         BodChoGrd = (2, 0)  # 2x1
@@ -179,6 +219,7 @@ class App:
         self.Offset.grid(row=OffsetGrd[0], column=OffsetGrd[1]+1)
 
         self.QuickSaveButton.grid(row=QckSvGrd[0], column=QckSvGrd[1], pady=4, padx=4)
+        self.QuickLoadButton.grid(row=QckSvGrd[0]+1, column=QckSvGrd[1], pady=4, padx=4)
 
     def addbodyto(self):
         temp = SolSys.Body(name=self.NewBodyNameVar.get())
@@ -198,6 +239,7 @@ class App:
         self.YearHourVar.set(self.current.Current.Year)
         self.YearDayVar.set(self.current.Current.Year/self.current.Day)
         self.DayVar.set(self.current.Current.Day)
+        self.OffsetVar.set(self.current.Current.Offset)
         return
 
     def changename(self, event=None):
@@ -224,6 +266,16 @@ class App:
 
     def changesysday(self, event=None):
         self.current.setday(self.SystemDayVar.get())
+        self.updatedata()
+        return
+
+    def changeoffset(self, event=None):
+        self.current.Current.setoffset(self.OffsetVar.get())
+        return
+
+    def quickload(self, event=None):
+        self.current = pickle.load(open('quicksave.p', 'rb'))
+        self.CurrBod.set(self.current.Current.Name)
         self.updatedata()
         return
 

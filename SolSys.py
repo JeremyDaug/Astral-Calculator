@@ -6,6 +6,13 @@ Contains the Classes and functions for SolSys and Body
 
 # from math import *
 
+# Constants for our defaults
+AU = 1.4960 * 10 ** 11
+# Law of Harmonies Time**2 / Radius**3 unique to every dominating body with children
+STDSOLRAT = ((365.25*24)**2)/(1**3)
+STDTERRAT = ((29.5*24)**2)/(0.0026**3)  # Based on Earth/Moon
+STDGASRAT = ((1.77*24)**2)/((421700/AU)**3)  # Based on Jupiter/Io
+
 
 class SolSys:
     """
@@ -19,8 +26,12 @@ class SolSys:
         self.Bods = None
         # The standardized day of the system
         self.Day = 24
+        # The standardized Year of the System
+        self.Year = 365
         # The body we are currently observing
         self.Current = None
+        # Extra Data that is used by the system in total.
+        self.Extras = {}
 
     def setday(self, num):
         """
@@ -78,15 +89,34 @@ class SolSys:
         return ret
 
     def setname(self, name):
+        """
+        Sets the name of the system
+        :param name: The name to change our system to.
+        :return: Nothing
+        """
         self.Name = name
         return
 
     def setcurrent(self, name):
+        """
+        Finds and sets the Current pointer to a body
+        :param name: The body we are looking for
+        :return: Nothing
+        """
         if self.Bods is None:
             return
-        self.Current = self.Bods.setcurrent(name)
+        self.Current = self.Bods.findbody(name)
         if self.Current.Name != name:
             print('There\'s been a problem finding it, but something return anyway.')
+        return
+
+    def calculatephase(self, name, target, date):
+        """
+        Calculates the phase of one body relative to another
+        :param name: the body we are viewing from
+        :param target: the body we are viewing
+        :return: the degree of phase difference from direct illumination
+        """
         return
 
 
@@ -95,7 +125,7 @@ class Body:
     Body Class
     Holds all data for our celestial bodies.
     """
-    def __init__(self, name='', year=0, day=24, offset=0, parent=None):
+    def __init__(self, name='', year=0, day=24, offset=0, parent=None, extra=None):
         # Name of the body
         self.Name = name
         # Length of the year in hours
@@ -108,6 +138,10 @@ class Body:
         self.Parent = parent
         # The children of the body that orbit it.
         self.children = []
+        # Extra data for the body
+        if extra is None:
+            extra = dict()
+        self.Extra = extra
 
     def setyear(self, num):
         """
@@ -135,13 +169,25 @@ class Body:
         :param num: the number that is put into the offset, modded to be between 0 and 360
         """
         self.Offset = num % 360
+        return
 
     def getnames(self, ret):
+        """
+        Retrieves the names of the bodies and children of this body
+        :param ret: the array to be returned
+        :return: an array of names, passed back through ret.
+        """
         ret.append(self.Name)
         for i in self.children:
             i.getnames(ret)
 
     def addbodyto(self, name, body):
+        """
+        Adds a body to the body if it's name matches, used in recursion
+        :param name: The name to attach it to.
+        :param body: The body to attach
+        :return: True or false for success
+        """
         if self.Name == name:
             body.Parent = self
             self.children.append(body)
@@ -154,11 +200,21 @@ class Body:
         return False
 
     def namesindict(self, ret):
+        """
+        Names of the body and it's children in simplified dict form.
+        :param ret: The dict to be returned
+        :return: The ret, passed back through Param.
+        """
         ret[self.Name] = {}
         for i in self.children:
             i.namesindict(ret[self.Name])
 
-    def setcurrent(self, name):
+    def findbody(self, name):
+        """
+        Used with SolSys.setcurrent
+        :param name: The name we are looking for
+        :return: Either returns a body, either itself, one of it's children, or None if failed.
+        """
         if name == self.Name:
             return self
         else:
