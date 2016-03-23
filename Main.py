@@ -63,7 +63,7 @@ class App:
     def __init__(self):
         # The star system we are working with.
         self.current = SolSys.SolSys()
-        SolarSystemDefault(self.current)
+        #SolarSystemDefault(self.current)
 
         # Window setup
         self.root = Tk()
@@ -85,6 +85,7 @@ class App:
         self.YearRadioVar = IntVar()
         self.DayVar = IntVar()
         self.OffsetVar = IntVar()
+        self.DistVar = DoubleVar()
 
         # What's in the Window
         self.SystemLbl = Label(self.root, text='System Name')
@@ -133,7 +134,16 @@ class App:
         self.OffsetLBL = Label(self.root, text='Body Offset from 0 deg')
         self.Offset = Entry(self.root, textvariable=self.OffsetVar)
 
+        # Distance from Parent
+        # self.DistLBL = Label(self.root, text='Distance in AU from ')
+        # self.Dist = Label(self.root, textvariable=self.DistVar)
+
         # Children
+
+        # Delete current Body
+        self.DeleteCurr = Button(self.root,
+                                 text='Delete Current Body'
+                                 )
 
         # Save options
         # Quick Save Button
@@ -158,6 +168,8 @@ class App:
         self.BodyChoice.bind('<<ComboboxSelected>>', lambda e: self.updatedata())
         self.BodyChoice.bind('<Return>', lambda e: self.updatedata())
         self.BodyChoice.bind('<FocusOut>', lambda e: self.updatedata())
+
+        self.NewBodyName.bind('<Return>', lambda e: self.addbodyto())
 
         self.SystemDay.bind('<Return>', self.changesysday)
         self.SystemDay.bind('<FocusOut>', self.changesysday)

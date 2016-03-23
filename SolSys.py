@@ -219,7 +219,7 @@ class Body:
             return self
         else:
             for i in self.children:
-                temp = i.setcurrent(name)
+                temp = i.findbody(name)
                 if temp is not None:
                     return temp
         return None

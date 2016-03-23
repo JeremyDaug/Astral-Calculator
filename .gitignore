@@ -63,3 +63,6 @@ target/
 
 #Jetbean editor data
 .idea/
+
+#Systems to ignore
+*.p
