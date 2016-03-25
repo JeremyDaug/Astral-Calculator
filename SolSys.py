@@ -110,6 +110,9 @@ class SolSys:
             print('There\'s been a problem finding it, but something return anyway.')
         return
 
+    def deletebody(self, body):
+        pass
+
     def calculatephase(self, name, target, date):
         """
         Calculates the phase of one body relative to another

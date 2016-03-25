@@ -7,6 +7,7 @@ Astral Calculator's Main file, includes our windows and jumping off points for m
 
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 import pickle
 import SolSys
 # import random
@@ -63,7 +64,7 @@ class App:
     def __init__(self):
         # The star system we are working with.
         self.current = SolSys.SolSys()
-        #SolarSystemDefault(self.current)
+        # SolarSystemDefault(self.current)
 
         # Window setup
         self.root = Tk()
@@ -142,7 +143,8 @@ class App:
 
         # Delete current Body
         self.DeleteCurr = Button(self.root,
-                                 text='Delete Current Body'
+                                 text='Delete Current Body',
+                                 command=self.deletebody
                                  )
 
         # Save options
@@ -199,6 +201,7 @@ class App:
         YearGrd = (3, 2)  # 3x2
         DayGrd = (6, 2)  # 2x2
         OffsetGrd = (6, 4)  # 2x2
+        DelGrd = (100, 0)  # 1x1
         QckSvGrd = (100, 100)  # 1x1
 
         self.SystemLbl.grid(row=SysLabGrd[0], column=SysLabGrd[1])
@@ -229,6 +232,8 @@ class App:
 
         self.OffsetLBL.grid(row=OffsetGrd[0], column=OffsetGrd[1])
         self.Offset.grid(row=OffsetGrd[0], column=OffsetGrd[1]+1)
+
+        self.DeleteCurr.grid(row=DelGrd[0], column=DelGrd[1])
 
         self.QuickSaveButton.grid(row=QckSvGrd[0], column=QckSvGrd[1], pady=4, padx=4)
         self.QuickLoadButton.grid(row=QckSvGrd[0]+1, column=QckSvGrd[1], pady=4, padx=4)
@@ -291,10 +296,21 @@ class App:
         self.updatedata()
         return
 
+    def deletebody(self):
+        if self.current.Current is None:
+            messagebox.showwarning('Body Delete Error', 'No body to Delete')
+            return
+        if not self.current.Current.children:
+            self.current.deletebody(self.current.Current)
+            return
+        if self.current.Current.children:
+            messagebox.showwarning('Body Delete Error', 'Body has children, delete them first')
+        return
+
 
 if __name__ == "__main__":
     Root = App()
     Root.root.mainloop()
-    print(Root.current.Name)
+    print(Root.current.Current.children)
     print(Root.current.namesindict())
     print("You exist and should take comfort and that fact.")
