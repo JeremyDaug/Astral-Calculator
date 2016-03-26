@@ -9,7 +9,7 @@ Contains the Classes and functions for SolSys and Body
 # Constants for our defaults
 AU = 1.4960 * 10 ** 11
 # Law of Harmonies Time**2 / Radius**3 unique to every dominating body with children
-STDSOLRAT = ((365.25*24)**2)/(1**3)
+STDSOLRAT = ((365.25*24)**2)/(1**3)  # Based on Sun/Earth
 STDTERRAT = ((29.5*24)**2)/(0.0026**3)  # Based on Earth/Moon
 STDGASRAT = ((1.77*24)**2)/((421700/AU)**3)  # Based on Jupiter/Io
 
@@ -111,7 +111,17 @@ class SolSys:
         return
 
     def deletebody(self, body):
-        pass
+        """
+        Routes to the delete function of the body given.
+        :param body: the body we are going to delete.
+        :return: Returns the parent of the deleted body or nothing.
+        """
+        if body.Parent:
+            return body.Parent.deletechild(body)
+        else:
+            self.Bods = None
+            self.Current = None
+            return None
 
     def calculatephase(self, name, target, date):
         """
@@ -226,3 +236,15 @@ class Body:
                 if temp is not None:
                     return temp
         return None
+
+    def deletechild(self, body):
+        """
+        Deletes one of the children of the body.
+        :param body: the body to be deleted.
+        :return: Returns itself and if it deletes the body, else raises an exception
+        """
+        if body in self.children:
+            self.children.remove(body)
+        else:
+            raise Exception
+        return self

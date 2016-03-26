@@ -299,11 +299,15 @@ class App:
     def deletebody(self):
         if self.current.Current is None:
             messagebox.showwarning('Body Delete Error', 'No body to Delete')
-            return
-        if not self.current.Current.children:
-            self.current.deletebody(self.current.Current)
-            return
-        if self.current.Current.children:
+        elif not self.current.Current.children:
+            self.current.Current = self.current.deletebody(self.current.Current)
+            if self.current.Current is None:
+                self.current.Bods = None
+            self.updatedata()
+            self.BodyChoice['values'] = self.current.getnames()
+            if '<None>' in self.BodyChoice.get():
+                self.BodyChoice.set('<None>')
+        elif self.current.Current.children:
             messagebox.showwarning('Body Delete Error', 'Body has children, delete them first')
         return
 
@@ -311,6 +315,6 @@ class App:
 if __name__ == "__main__":
     Root = App()
     Root.root.mainloop()
-    print(Root.current.Current.children)
+    print(Root.current.Name)
     print(Root.current.namesindict())
     print("You exist and should take comfort and that fact.")
