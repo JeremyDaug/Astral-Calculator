@@ -303,10 +303,11 @@ class App:
             self.current.Current = self.current.deletebody(self.current.Current)
             if self.current.Current is None:
                 self.current.Bods = None
-            self.updatedata()
             self.BodyChoice['values'] = self.current.getnames()
             if '<None>' in self.BodyChoice.get():
                 self.BodyChoice.set('<None>')
+                self.CurrBod.set('<None>')
+            self.updatedata()
         elif self.current.Current.children:
             messagebox.showwarning('Body Delete Error', 'Body has children, delete them first')
         return
