@@ -87,10 +87,13 @@ class App:
         self.HarmRadioVar.set(1)
 
         self.CurrentBodyNameVar = StringVar()
-        self.YearHourVar = IntVar()
+        self.YearHourVar = DoubleVar()
         self.YearDayVar = DoubleVar()
-        self.YearRadioVar = IntVar()
-        self.DayVar = IntVar()
+        self.DayVar = DoubleVar()
+        self.YearBodDayVar = DoubleVar()
+        self.DayYearRadioVar = IntVar()
+        self.DayYearRadioVar.set(1)
+
         self.OffsetVar = IntVar()
         self.ParentBodyVar = StringVar()
         if self.current.Current:
@@ -135,9 +138,9 @@ class App:
         self.ParentRatio = Label(self.root, textvariable=self.ParentRatioVar)
         # Radio buttons to change or maintain harmonic ratio, changing harmonic ratio effects all bodies.
         self.HarmRadio1 = Radiobutton(self.root, text='Maintain Harmonic Ratio', variable=self.HarmRadioVar, value=1)
-        self.HarmRadio2 = Radiobutton(self.root, text='maintain Distance (Change Harmonic ratio)', value=2,
+        self.HarmRadio2 = Radiobutton(self.root, text='Maintain Day/Distance\n (Warning, may have side effects)',
+                                      value=2,
                                       variable=self.HarmRadioVar)
-
 
         # Current Body Data, input, and output
         # Body Name
@@ -153,8 +156,18 @@ class App:
 
         # Day
         self.DayLBL = Label(self.root, text='Day')
-        self.DayInHours = Label(self.root, text='Day in Hours')
-        self.DayHours = Entry(self.root, textvariable=self.DayVar)
+        self.DayInHoursLBL = Label(self.root, text='Day in Hours')
+        self.DayInHours = Entry(self.root, textvariable=self.DayVar)
+
+        # Year in planet's days
+        self.YearBodDayLBL = Label(self.root, text='Year in Body Days')
+        self.YearBodyDay = Entry(self.root, textvariable=self.YearBodDayVar)
+
+        # Radio buttons to define whether the day or the year is kept the same
+        self.DayYearRadioYear = Radiobutton(self.root, text='Keep Body Year Length', variable=self.DayYearRadioVar,
+                                            value=1)
+        self.DayYearRadioDay = Radiobutton(self.root, text='Keep Body Day Length', variable=self.DayYearRadioVar,
+                                           value=2)
 
         # Offset
         self.OffsetLBL = Label(self.root, text='Body Offset from 0 deg')
@@ -166,7 +179,7 @@ class App:
 
         # Body Harmonic Ratio
         self.RatioLBL = Label(self.root, text='Harmonic Ratio')
-        self.Ratio = Label(self.root, textvariable=self.RatioVar)
+        self.Ratio = Entry(self.root, textvariable=self.RatioVar)
         self.RatioDaysLBL = Label(self.root, text='Change ratio by Days')
         self.RatioDays = Entry(self.root, textvariable=self.RatioDaysVar)
         self.RatioDistLBL = Label(self.root, text='Change Ratio By Distance in AUs')
@@ -179,6 +192,8 @@ class App:
                                  text='Delete Current Body',
                                  command=self.deletebody
                                  )
+
+        # Set as system standard
 
         # Save options
         # Quick Save Button
@@ -198,7 +213,7 @@ class App:
     # Binding Settings
     def bindset(self):
         """"
-        bindset, where al the binds are to be set. Organized by creation order
+        bindset, where all the binds are to be set. Organized by creation order
         """
         self.SystemName.bind('<Return>', lambda x: self.current.setname(self.SystemName.get()))
         self.SystemName.bind('<FocusOut>', lambda x: self.current.setname(self.SystemName.get()))
@@ -223,8 +238,11 @@ class App:
         self.YearDays.bind('<FocusOut>', self.changeyeardays)
         self.YearDays.bind('<Return>', self.changeyeardays)
 
-        self.DayHours.bind('<FocusOut>', self.changedayhours)
-        self.DayHours.bind('<Return>', self.changedayhours)
+        self.DayInHours.bind('<FocusOut>', self.changedayhours)
+        self.DayInHours.bind('<Return>', self.changedayhours)
+
+        self.YearBodyDay.bind('<FocusOut>', self.changeyearindays)
+        self.YearBodyDay.bind('<Return>', self.changeyearindays)
 
         self.Offset.bind('<Return>', self.changeoffset)
         self.Offset.bind('<FocusOut>', self.changeoffset)
@@ -240,14 +258,20 @@ class App:
         NewBodGrd = (4, 0)  # 3x1
         SysDayGrd = (0, 1)  # 2x1
         SysYearGrd = (0, 2)  # 2x1
-        ParentDataGrd = (1, 1)  # 5x1
+        ParentDataGrd = (2, 1)  # 5x1
 
         NewNameGrd = (3, 2)  # 1x2
         YearGrd = (4, 2)  # 3x2
         DayGrd = (7, 2)  # 2x2
-        OffsetGrd = (6, 6)  # 2x2
+        YearBodGrd = (9, 2)  # 1x2
+        DayYearGrd = (10, 2)  # 2x1
+
+        OffsetGrd = (6, 6)  # 1x2
         ParentGrd = (4, 6)  # 3x2
-        RatGrd = (4, 8)  # 2x2
+        RatGrd = (7, 6)  # 2x2
+
+        SetStdGrd = (50, 50)  # 1x2
+
         DelGrd = (100, 0)  # 1x1
         QckSvGrd = (100, 100)  # 1x1
 
@@ -287,8 +311,14 @@ class App:
         self.YearDays.grid(row=YearGrd[0]+2, column=YearGrd[1]+1)
 
         self.DayLBL.grid(row=DayGrd[0], column=DayGrd[1])
-        self.DayInHours.grid(row=DayGrd[0]+1, column=DayGrd[1])
-        self.DayHours.grid(row=DayGrd[0]+1, column=DayGrd[1]+1)
+        self.DayInHoursLBL.grid(row=DayGrd[0]+1, column=DayGrd[1])
+        self.DayInHours.grid(row=DayGrd[0]+1, column=DayGrd[1]+1)
+
+        self.YearBodDayLBL.grid(row=YearBodGrd[0], column=YearBodGrd[1])
+        self.YearBodyDay.grid(row=YearBodGrd[0], column=YearBodGrd[1]+1)
+
+        self.DayYearRadioYear.grid(row=DayYearGrd[0], column=DayYearGrd[1])
+        self.DayYearRadioDay.grid(row=DayYearGrd[0]+1, column=DayYearGrd[1])
 
         self.DistLBL.grid(row=ParentGrd[0]+1, column=ParentGrd[1])
         self.Dist.grid(row=ParentGrd[0]+1, column=ParentGrd[1]+1)
@@ -296,12 +326,12 @@ class App:
         self.OffsetLBL.grid(row=OffsetGrd[0], column=OffsetGrd[1])
         self.Offset.grid(row=OffsetGrd[0], column=OffsetGrd[1]+1)
 
-        self.RatioLBL.grid(row=RatGrd[0], column=RatGrd[1])
-        self.Ratio.grid(row=RatGrd[0], column=RatGrd[1]+1)
-        self.RatioDaysLBL.grid(row=RatGrd[0]+1, column=RatGrd[1])
-        self.RatioDays.grid(row=RatGrd[0]+1, column=RatGrd[1]+1)
-        self.RatioDistLBL.grid(row=RatGrd[0]+2, column=RatGrd[1])
-        self.RatioDist.grid(row=RatGrd[0]+2, column=RatGrd[1]+1)
+        self.RatioLBL.grid(row=RatGrd[0], column=RatGrd[1], padx=4, pady=4)
+        self.Ratio.grid(row=RatGrd[0], column=RatGrd[1]+1, padx=4, pady=4)
+        self.RatioDaysLBL.grid(row=RatGrd[0]+1, column=RatGrd[1], padx=4, pady=4)
+        self.RatioDays.grid(row=RatGrd[0]+1, column=RatGrd[1]+1, padx=4, pady=4)
+        self.RatioDistLBL.grid(row=RatGrd[0]+2, column=RatGrd[1], padx=4, pady=4)
+        self.RatioDist.grid(row=RatGrd[0]+2, column=RatGrd[1]+1, padx=4, pady=4)
 
         self.DeleteCurr.grid(row=DelGrd[0], column=DelGrd[1])
 
@@ -330,13 +360,17 @@ class App:
         self.YearHourVar.set(self.current.Current.Year)
         self.YearDayVar.set(self.current.Current.Year/self.current.Day)
         self.DayVar.set(self.current.Current.Day)
+        self.YearBodDayVar.set(self.current.Current.Year/self.current.Current.Day)
+
+        self.ParentRatioVar.set(self.current.Current.getparentratio())
         if self.current.Current.Parent is None:
             self.ParentBodyVar.set('<None>')
         else:
             self.ParentBodyVar.set(self.current.Current.Parent.Name)
+
         self.OffsetVar.set(self.current.Current.Offset)
         self.DistVar.set(self.current.orbitdistance())
-        self.RatioVar.set(self.current.Current.getparentratio())
+        self.RatioVar.set(self.current.Current.Extra['Ratio'])
         self.RatioDaysVar.set(self.current.Current.Year)
         self.RatioDistVar.set(self.current.orbitdistance())
         return
@@ -359,8 +393,19 @@ class App:
         return
 
     def changedayhours(self, event=None):
-        self.current.Current.setday(self.DayVar.get())
+        if self.YearBodDayVar.get() == 1:  # Keep year length
+            self.current.Current.Day = self.DayVar.get()
+        elif self.YearBodDayVar.get() == 2:  # Keep day length
+            self.current.Current.Day = self.DayVar.get()
+
         self.updatedata()
+        return
+
+    def changeyearindays(self, event=None):
+        if self.YearBodDayVar.get() == 1:  # Keep year length
+            pass
+        elif self.YearBodDayVar.get() == 2:  # Keep day length
+            pass
         return
 
     def changesysday(self, event=None):
@@ -392,7 +437,9 @@ class App:
         elif not self.current.Current.children:
             self.current.Current = self.current.deletebody(self.current.Current)
             if self.current.Current is None:
+                print('No Current, swap it to something')
                 self.current.Bods = None
+            self.CurrBod.set(self.current.Current.Name)
             self.updatedata()
             self.BodyChoice['values'] = self.current.getnames()
             if '<None>' in self.BodyChoice.get():
@@ -411,7 +458,5 @@ class App:
 if __name__ == "__main__":
     Root = App()
     Root.root.mainloop()
-    print(Root.current.Day)
-    print(Root.current.Year)
     print(Root.current.namesindict())
     print("You exist and should take comfort and that fact.")

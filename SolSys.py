@@ -28,11 +28,11 @@ class SolSys:
         # The standardized day of the system
         self.Day = 24
         # The standardized Year of the System
-        self.Year = 365
+        self.Year = 365.25
         # The body we are currently observing
         self.Current = None
         # Extra Data that is used by the system in total.
-        self.Extras = {}
+        self.Extras = {'HoursInYear': self.Day*self.Year}
 
     def setday(self, num):
         """
@@ -155,6 +155,15 @@ class SolSys:
             name = self.Current.Name
         temp = self.Bods.findbody(name)
         temp.setdistance(distance)
+        return
+
+    def getbodyratio(self, name):
+        """
+        get function that returns the harmonic ratio of a body relative to the entire
+        system. Using the System year and day as the standard measurements of the system.
+        :param name: The name of the body we getting the system ratio of.
+        :return: The ratio using the system's year and day as the standard.
+        """
         return
 
     def calculatephase(self, name, target, date):
@@ -303,6 +312,10 @@ class Body:
             return 0
 
     def getparentratio(self):
+        """
+        Function to return the body's parent's ratio.
+        :return: The ratio of the parent body.
+        """
         if self.Parent is None:
             return 0
         else:
