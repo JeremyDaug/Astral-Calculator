@@ -64,7 +64,7 @@ class App:
     def __init__(self):
         # The star system we are working with.
         self.current = SolSys.SolSys()
-        # SolarSystemDefault(self.current)
+        SolarSystemDefault(self.current)
 
         # Window setup
         self.root = Tk()
@@ -80,13 +80,28 @@ class App:
         self.NewBodyNameVar = StringVar()
         self.SystemDayVar = DoubleVar()
         self.SystemDayVar.set(self.current.Day)
-        self.CurrentBodyVar = StringVar()
+        self.SystemYearVar = DoubleVar()
+        self.SystemYearVar.set(self.current.Year)
+        self.ParentRatioVar = DoubleVar()
+        self.HarmRadioVar = IntVar()
+        self.HarmRadioVar.set(1)
+
+        self.CurrentBodyNameVar = StringVar()
         self.YearHourVar = IntVar()
         self.YearDayVar = DoubleVar()
         self.YearRadioVar = IntVar()
         self.DayVar = IntVar()
         self.OffsetVar = IntVar()
+        self.ParentBodyVar = StringVar()
+        if self.current.Current:
+            if self.current.Current.Parent:
+                self.ParentBodyVar.set(self.current.Current.Parent.Name)
+        else:
+            self.ParentBodyVar.set('<None>')
         self.DistVar = DoubleVar()
+        self.RatioVar = DoubleVar()
+        self.RatioDaysVar = DoubleVar()
+        self.RatioDistVar = DoubleVar()
 
         # What's in the Window
         self.SystemLbl = Label(self.root, text='System Name')
@@ -107,16 +122,27 @@ class App:
 
         # Standard day of the System
         self.SystemDayLBL = Label(self.root, text='System Day Length')
-        self.SystemDay = Spinbox(self.root,
-                                 from_=1,
-                                 to=100000,
-                                 textvariable=self.SystemDayVar,
-                                 command=self.changesysday)
+        self.SystemDay = Entry(self.root, textvariable=self.SystemDayVar)
+
+        # Standard year of the system
+        self.SystemYearLBL = Label(self.root, text='System Year Length')
+        self.SystemYear = Entry(self.root, textvariable=self.SystemYearVar)
+
+        # Parents Data and harmonic ratio data
+        self.ParentLBL = Label(self.root, text='Parent body')
+        self.ParentLBL2 = Label(self.root, textvariable=self.ParentBodyVar)
+        self.ParentRatioLBL = Label(self.root, text='Parent\'s Harmonic Ratio')
+        self.ParentRatio = Label(self.root, textvariable=self.ParentRatioVar)
+        # Radio buttons to change or maintain harmonic ratio, changing harmonic ratio effects all bodies.
+        self.HarmRadio1 = Radiobutton(self.root, text='Maintain Harmonic Ratio', variable=self.HarmRadioVar, value=1)
+        self.HarmRadio2 = Radiobutton(self.root, text='maintain Distance (Change Harmonic ratio)', value=2,
+                                      variable=self.HarmRadioVar)
+
 
         # Current Body Data, input, and output
         # Body Name
         self.CurrentBodyLBL = Label(self.root, text='Body\'s name')
-        self.CurrentBody = Entry(self.root, textvariable=self.CurrentBodyVar)
+        self.CurrentBodyName = Entry(self.root, textvariable=self.CurrentBodyNameVar)
 
         # Year
         self.YearLBL = Label(self.root, text='Year')
@@ -125,7 +151,6 @@ class App:
         self.YearInDay = Label(self.root, text='Year in System Days')
         self.YearDays = Entry(self.root, textvariable=self.YearDayVar)
 
-        # self.YearRadio1 = Radiobutton(self.root, text='Static Days')
         # Day
         self.DayLBL = Label(self.root, text='Day')
         self.DayInHours = Label(self.root, text='Day in Hours')
@@ -136,8 +161,16 @@ class App:
         self.Offset = Entry(self.root, textvariable=self.OffsetVar)
 
         # Distance from Parent
-        # self.DistLBL = Label(self.root, text='Distance in AU from ')
-        # self.Dist = Label(self.root, textvariable=self.DistVar)
+        self.DistLBL = Label(self.root, text='Distance in AUs')
+        self.Dist = Entry(self.root, textvariable=self.DistVar)
+
+        # Body Harmonic Ratio
+        self.RatioLBL = Label(self.root, text='Harmonic Ratio')
+        self.Ratio = Label(self.root, textvariable=self.RatioVar)
+        self.RatioDaysLBL = Label(self.root, text='Change ratio by Days')
+        self.RatioDays = Entry(self.root, textvariable=self.RatioDaysVar)
+        self.RatioDistLBL = Label(self.root, text='Change Ratio By Distance in AUs')
+        self.RatioDist = Entry(self.root, textvariable=self.RatioDistVar)
 
         # Children
 
@@ -164,6 +197,9 @@ class App:
 
     # Binding Settings
     def bindset(self):
+        """"
+        bindset, where al the binds are to be set. Organized by creation order
+        """
         self.SystemName.bind('<Return>', lambda x: self.current.setname(self.SystemName.get()))
         self.SystemName.bind('<FocusOut>', lambda x: self.current.setname(self.SystemName.get()))
 
@@ -176,8 +212,11 @@ class App:
         self.SystemDay.bind('<Return>', self.changesysday)
         self.SystemDay.bind('<FocusOut>', self.changesysday)
 
-        self.CurrentBody.bind('<Return>', self.changename)
-        self.CurrentBody.bind('<FocusOut>', self.changename)
+        self.SystemYear.bind('<Return>', self.changesysyear)
+        self.SystemYear.bind('<FocusOut>', self.changesysyear)
+
+        self.CurrentBodyName.bind('<Return>', self.changename)
+        self.CurrentBodyName.bind('<FocusOut>', self.changename)
 
         self.YearHour.bind('<FocusOut>', self.changeyearhours)
         self.YearHour.bind('<Return>', self.changeyearhours)
@@ -189,6 +228,9 @@ class App:
 
         self.Offset.bind('<Return>', self.changeoffset)
         self.Offset.bind('<FocusOut>', self.changeoffset)
+
+        self.Dist.bind('<Return>', self.changedistance)
+        self.Dist.bind('<FocusOut>', self.changedistance)
         return
 
     # Grid layout setting
@@ -197,10 +239,15 @@ class App:
         BodChoGrd = (2, 0)  # 2x1
         NewBodGrd = (4, 0)  # 3x1
         SysDayGrd = (0, 1)  # 2x1
-        NewNameGrd = (0,2)  # 1x2
-        YearGrd = (3, 2)  # 3x2
-        DayGrd = (6, 2)  # 2x2
-        OffsetGrd = (6, 4)  # 2x2
+        SysYearGrd = (0, 2)  # 2x1
+        ParentDataGrd = (1, 1)  # 5x1
+
+        NewNameGrd = (3, 2)  # 1x2
+        YearGrd = (4, 2)  # 3x2
+        DayGrd = (7, 2)  # 2x2
+        OffsetGrd = (6, 6)  # 2x2
+        ParentGrd = (4, 6)  # 3x2
+        RatGrd = (4, 8)  # 2x2
         DelGrd = (100, 0)  # 1x1
         QckSvGrd = (100, 100)  # 1x1
 
@@ -217,8 +264,21 @@ class App:
         self.SystemDayLBL.grid(row=SysDayGrd[0], column=SysDayGrd[1], padx=4, pady=4)
         self.SystemDay.grid(row=SysDayGrd[0]+1, column=SysDayGrd[1])
 
+        self.SystemYearLBL.grid(row=SysYearGrd[0], column=SysYearGrd[1])
+        self.SystemYear.grid(row=SysYearGrd[0]+1, column=SysYearGrd[1])
+
+        self.ParentLBL.grid(row=ParentDataGrd[0], column=ParentDataGrd[1])
+        self.ParentLBL2.grid(row=ParentDataGrd[0]+1, column=ParentDataGrd[1])
+        self.ParentRatioLBL.grid(row=ParentDataGrd[0]+2, column=ParentDataGrd[1])
+        self.ParentRatio.grid(row=ParentDataGrd[0]+3, column=ParentDataGrd[1])
+        # Radio buttons to change or maintain harmonic ratio, changing harmonic ratio effects all bodies.
+        self.HarmRadio1.grid(row=ParentDataGrd[0]+4, column=ParentDataGrd[1])
+        self.HarmRadio2.grid(row=ParentDataGrd[0]+5, column=ParentDataGrd[1])
+
+        # Unique to body.
+
         self.CurrentBodyLBL.grid(row=NewNameGrd[0], column=NewNameGrd[1])
-        self.CurrentBody.grid(row=NewNameGrd[0], column=NewNameGrd[1]+1)
+        self.CurrentBodyName.grid(row=NewNameGrd[0], column=NewNameGrd[1]+1)
 
         self.YearLBL.grid(row=YearGrd[0], column=YearGrd[1])
         self.YearInHours.grid(row=YearGrd[0]+1, column=YearGrd[1])
@@ -230,8 +290,18 @@ class App:
         self.DayInHours.grid(row=DayGrd[0]+1, column=DayGrd[1])
         self.DayHours.grid(row=DayGrd[0]+1, column=DayGrd[1]+1)
 
+        self.DistLBL.grid(row=ParentGrd[0]+1, column=ParentGrd[1])
+        self.Dist.grid(row=ParentGrd[0]+1, column=ParentGrd[1]+1)
+
         self.OffsetLBL.grid(row=OffsetGrd[0], column=OffsetGrd[1])
         self.Offset.grid(row=OffsetGrd[0], column=OffsetGrd[1]+1)
+
+        self.RatioLBL.grid(row=RatGrd[0], column=RatGrd[1])
+        self.Ratio.grid(row=RatGrd[0], column=RatGrd[1]+1)
+        self.RatioDaysLBL.grid(row=RatGrd[0]+1, column=RatGrd[1])
+        self.RatioDays.grid(row=RatGrd[0]+1, column=RatGrd[1]+1)
+        self.RatioDistLBL.grid(row=RatGrd[0]+2, column=RatGrd[1])
+        self.RatioDist.grid(row=RatGrd[0]+2, column=RatGrd[1]+1)
 
         self.DeleteCurr.grid(row=DelGrd[0], column=DelGrd[1])
 
@@ -239,12 +309,16 @@ class App:
         self.QuickLoadButton.grid(row=QckSvGrd[0]+1, column=QckSvGrd[1], pady=4, padx=4)
 
     def addbodyto(self):
+        if self.NewBodyNameVar.get() == '':
+            messagebox.showwarning('New Body Creation Error', 'No name given, no body made.')
+            return
         temp = SolSys.Body(name=self.NewBodyNameVar.get())
         self.current.addbodyto(self.CurrBod.get(), temp)
         self.BodyChoice['values'] = self.current.getnames()
         if '<None>' in self.BodyChoice.get():
             self.BodyChoice.set(temp.Name)
             self.current.Current = temp
+        self.NewBodyNameVar.set('')
         self.updatedata()
         return
 
@@ -252,18 +326,26 @@ class App:
         if self.current.Current is None:
             return
         self.current.setcurrent(self.CurrBod.get())
-        self.CurrentBodyVar.set(self.CurrBod.get())
+        self.CurrentBodyNameVar.set(self.CurrBod.get())
         self.YearHourVar.set(self.current.Current.Year)
         self.YearDayVar.set(self.current.Current.Year/self.current.Day)
         self.DayVar.set(self.current.Current.Day)
+        if self.current.Current.Parent is None:
+            self.ParentBodyVar.set('<None>')
+        else:
+            self.ParentBodyVar.set(self.current.Current.Parent.Name)
         self.OffsetVar.set(self.current.Current.Offset)
+        self.DistVar.set(self.current.orbitdistance())
+        self.RatioVar.set(self.current.Current.getparentratio())
+        self.RatioDaysVar.set(self.current.Current.Year)
+        self.RatioDistVar.set(self.current.orbitdistance())
         return
 
     def changename(self, event=None):
-        if self.CurrentBodyVar.get() != self.CurrBod.get():
-            self.current.Current.Name = self.CurrentBodyVar.get()
+        if self.CurrentBodyNameVar.get() != self.CurrBod.get():
+            self.current.Current.Name = self.CurrentBodyNameVar.get()
             self.BodyChoice['values'] = self.current.getnames()
-            self.CurrBod.set(self.CurrentBodyVar.get())
+            self.CurrBod.set(self.CurrentBodyNameVar.get())
         return
 
     def changeyearhours(self, event=None):
@@ -282,7 +364,15 @@ class App:
         return
 
     def changesysday(self, event=None):
-        self.current.setday(self.SystemDayVar.get())
+        if not self.current.setday(self.SystemDayVar.get()):
+            messagebox.showwarning('Invalid Range for Day', 'Must be a positive Value')
+            return
+        self.updatedata()
+        return
+
+    def changesysyear(self, event=None):
+        if not self.current.setyear(self.SystemYearVar.get()):
+            messagebox.showwarning('Invalide Range For Year', 'Must be a Non-negative Value')
         self.updatedata()
         return
 
@@ -306,16 +396,26 @@ class App:
             self.BodyChoice['values'] = self.current.getnames()
             if '<None>' in self.BodyChoice.get():
                 self.BodyChoice.set('<None>')
+<<<<<<< HEAD
                 self.CurrBod.set('<None>')
             self.updatedata()
+=======
+            self.CurrBod.set(self.BodyChoice['values'][0])
+>>>>>>> origin/master
         elif self.current.Current.children:
             messagebox.showwarning('Body Delete Error', 'Body has children, delete them first')
+        return
+
+    def changedistance(self, event=None):
+        self.current.changedistance(distance=self.DistVar.get(), name=self.CurrBod.get())
+        self.updatedata()
         return
 
 
 if __name__ == "__main__":
     Root = App()
     Root.root.mainloop()
-    print(Root.current.Name)
+    print(Root.current.Day)
+    print(Root.current.Year)
     print(Root.current.namesindict())
     print("You exist and should take comfort and that fact.")

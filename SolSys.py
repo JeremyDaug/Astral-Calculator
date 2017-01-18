@@ -4,11 +4,12 @@ Part of the Astral Calculator
 Contains the Classes and functions for SolSys and Body
 """
 
-# from math import *
+from math import *
 
 # Constants for our defaults
-AU = 1.4960 * 10 ** 11
+AU = 1.4960 * 10 ** 11  # 1 AU = X in meters
 # Law of Harmonies Time**2 / Radius**3 unique to every dominating body with children
+# To be more exact Hours**2 / AU**3
 STDSOLRAT = ((365.25*24)**2)/(1**3)  # Based on Sun/Earth
 STDTERRAT = ((29.5*24)**2)/(0.0026**3)  # Based on Earth/Moon
 STDGASRAT = ((1.77*24)**2)/((421700/AU)**3)  # Based on Jupiter/Io
@@ -37,11 +38,25 @@ class SolSys:
         """
         Sets the system's standard day unit in hours to standardize the year in days across the system.
         :param num: The number of hours in the day
+        :return: If not positive it returns False, else True
         """
-        if num < 0:
-            self.Day = -num
+        if num <= 0:
+            return False
         else:
             self.Day = num
+            return True
+
+    def setyear(self, num):
+        """
+        Sets the system's standard year in system days to standardize the year across the system
+        :param num: The number of days in a system year
+        :return: if the Value is negative return False, else True
+        """
+        if num < 0:
+            return False
+        else:
+            self.Year = num
+            return True
 
     def basedayoff(self, bod):
         """
@@ -123,6 +138,25 @@ class SolSys:
             self.Current = None
             return None
 
+    def orbitdistance(self, name=None):
+        """
+        Orbit distance getter, specifically for a body to it's parent
+        :param name: The name of the body we want to find, if empty, goes to current
+        :return: Returns the distance in AU's
+        """
+        if name is None:
+            return self.Current.getdistance()
+        else:
+            temp = self.Current.findbody()
+            return temp.getdistance()
+
+    def changedistance(self, distance=1.0, name=None):
+        if name is None:
+            name = self.Current.Name
+        temp = self.Bods.findbody(name)
+        temp.setdistance(distance)
+        return
+
     def calculatephase(self, name, target, date):
         """
         Calculates the phase of one body relative to another
@@ -153,7 +187,10 @@ class Body:
         self.children = []
         # Extra data for the body
         if extra is None:
-            extra = dict()
+            if self.Parent is None:
+                extra = {'Ratio': STDSOLRAT}
+            else:
+                extra = {'Ratio': STDTERRAT}
         self.Extra = extra
 
     def setyear(self, num):
@@ -224,7 +261,7 @@ class Body:
 
     def findbody(self, name):
         """
-        Used with SolSys.setcurrent
+        Used to search through this body and it's children down.
         :param name: The name we are looking for
         :return: Either returns a body, either itself, one of it's children, or None if failed.
         """
@@ -248,3 +285,25 @@ class Body:
         else:
             raise Exception
         return self
+
+    def getdistance(self, target=None):
+        """
+        Gets the distance between this body and another body.
+        :param target: if None, gets the distance between this body and it's parent
+                       TODO else, it triangulates the distance using angles, and orbital distances
+        """
+        if target is None:
+            if self.Parent is None:
+                return 0
+            target = self.Parent
+            ratio = target.Extra['Ratio']
+            distance = (self.Year**2/ratio)**(1/3)
+            return distance
+        else:
+            return 0
+
+    def getparentratio(self):
+        if self.Parent is None:
+            return 0
+        else:
+            return self.Parent.Extra['Ratio']
